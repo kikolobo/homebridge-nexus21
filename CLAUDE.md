@@ -605,7 +605,15 @@ Do these in order. Read-only steps need no approval; ⚠ steps need the owner pr
 - [ ] Optional `id` config field for stable accessory identity (§5.4).
 - [ ] Optional platform-level `defaultHost` override (currently the constant `DEFAULT_HOST = '192.168.5.40'`).
 - [ ] If swivel commands appear in a future API version, add a second service (e.g. horizontal tilt or switches).
-- [ ] Publish to npm (the name `homebridge-nexus21` was free on 2026-09-15). Then apply for the Homebridge "Verified" badge at homebridge.io. Owner approval is required.
+- [x] **Published to npm 2026-09-15** as `homebridge-nexus21@0.2.3` by `kikolobo`.
+  Published with `--tag beta`, but npm assigns `latest` on a package's first publish regardless
+  and will not let it be removed, so **both `beta` and `latest` point at 0.2.3**. `latest` moves
+  on its own with the next release — publish 1.0.0 once §9 is complete.
+  npm 2FA is authenticator-based: publishing needs `--otp=<code>`, since the browser OTP flow
+  requires an interactive TTY and fails otherwise.
+- [ ] Apply for the Homebridge "Verified" badge at homebridge.io (needs §9 finished first).
+  Prerequisites already met: `homebridge-` name, `homebridge-plugin` keyword, `config.schema.json`,
+  MIT LICENSE, public repo with issues enabled, no root required.
 
 ---
 
