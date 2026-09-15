@@ -3,6 +3,22 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2026-09-15
+
+Fixes raised by the Homebridge verification bot. No functional change.
+
+### Fixed
+- `keywords` now includes `supports-hap`, which the verification checks require to
+  declare the supported transport (see "Declaring Supported Transports").
+- `config.schema.json` no longer uses `"required": true` on individual properties.
+  That is a form-library extension, not valid JSON Schema; the lift and memory-preset
+  objects now carry `"required": ["name", "host"]` and `"required": ["slot", "name"]`
+  at the object level. The Homebridge UI renders the same required fields.
+
+### Notes
+- 0.2.4 was tagged but never published to npm, which made the repo and the registry
+  disagree on the version. 0.2.5 supersedes it and carries both changes.
+
 ## [0.2.4] - 2026-09-15
 
 ### Fixed

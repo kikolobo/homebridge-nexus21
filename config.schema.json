@@ -21,18 +21,20 @@
         "type": "array",
         "items": {
           "type": "object",
+          "required": [
+            "name",
+            "host"
+          ],
           "properties": {
             "name": {
               "title": "Name",
               "type": "string",
-              "required": true,
               "default": "TV Lift"
             },
             "host": {
               "title": "IP Module Address",
               "type": "string",
               "format": "hostname",
-              "required": true,
               "default": "192.168.5.40",
               "placeholder": "192.168.5.40"
             },
@@ -83,11 +85,14 @@
               "maxItems": 3,
               "items": {
                 "type": "object",
+                "required": [
+                  "slot",
+                  "name"
+                ],
                 "properties": {
                   "slot": {
                     "title": "Memory",
                     "type": "integer",
-                    "required": true,
                     "oneOf": [
                       {
                         "title": "MEM1 (Home)",
@@ -111,8 +116,7 @@
                   },
                   "name": {
                     "title": "Name",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   },
                   "position": {
                     "title": "Position (0 = hidden, 100 = fully visible)",
