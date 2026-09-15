@@ -444,6 +444,10 @@ Platform-level option: `discover?: boolean` (default true).
 - The `host` field has `default` and `placeholder` = **192.168.5.40**.
 - `lifts` defaults to `[{ "name": "TV Lift", "host": "192.168.5.40", "orientation": "popup" }]`.
 - `orientation` and `memoryPresets[].slot` use `oneOf` dropdowns. `memoryPresets` has `maxItems: 3`.
+- Required fields are declared the **JSON Schema way**: `"required": ["name", "host"]` on the
+  lift object and `"required": ["slot", "name"]` on the memory-preset object. Do **not** go back
+  to `"required": true` on individual properties — the Homebridge UI's form library accepts that
+  extension, but the verification bot rejects the schema as invalid (fixed in 0.2.5).
 - **Keep the schema, `types.ts` and README in sync** whenever an option is added or changed.
 
 ### 5.8 Minimal and full `config.json` examples
@@ -628,6 +632,15 @@ would avoid that, and the owner chose to leave it as is.
 - [ ] Apply for the Homebridge "Verified" badge at homebridge.io (needs §9 finished first).
   Prerequisites already met: `homebridge-` name, `homebridge-plugin` keyword, `config.schema.json`,
   MIT LICENSE, public repo with issues enabled, no root required.
+  **First verification run (2026-09-15) failed four checks.** Two are fixed in 0.2.5:
+  the missing `supports-hap` keyword and the invalid `required` booleans in the schema (§5.7).
+  The other two are release chores, not code:
+  - **npm and GitHub must report the same version.** 0.2.4 was tagged but never published, so
+    the bot saw npm 0.2.3 vs repo 0.2.4. Every version bump in the repo now has to be followed
+    by an `npm publish`, or the check fails again.
+  - **The repo must contain GitHub *releases*, not just tags.** `v0.2.3` and `v0.2.4` exist as
+    tags with no release attached. Create releases (`gh release create vX.Y.Z --notes-file ...`
+    from the CHANGELOG section, or the GitHub web UI) for each published version.
 
 ---
 
@@ -643,3 +656,6 @@ would avoid that, and the owner chose to leave it as is.
   - The schema pre-fills the address field.
   - An empty `host` falls back to 192.168.5.40.
   - An empty `lifts` list yields one "TV Lift" at 192.168.5.40.
+- **0.2.3:** transient status-poll failures no longer tear down a move (§8.3); first release exercised against the physical lift.
+- **0.2.4:** sourcemaps embed their TypeScript sources. **Tagged but never published to npm** — superseded by 0.2.5.
+- **0.2.5:** Homebridge verification fixes — `supports-hap` keyword, JSON-Schema-correct `required` arrays. No functional change.
