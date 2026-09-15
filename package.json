@@ -1,7 +1,7 @@
 {
   "name": "homebridge-nexus21",
   "displayName": "Nexus 21 TV Lift",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Homebridge plugin for Nexus 21 TV lifts via the Nexus 21 IP Control module (IPLIN REST API).",
   "author": "Kiko Lobo",
   "license": "MIT",

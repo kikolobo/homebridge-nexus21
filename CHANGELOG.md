@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-09-15
+
+### Fixed
+- Sourcemaps now embed their TypeScript sources (`inlineSources`). The published
+  `.js.map` files referenced `../src/*.ts`, which is not shipped, so stack traces
+  in the Homebridge log could not resolve to real code. Adds ~9 kB to the package.
+
+### Notes
+- No functional change. 0.2.3 is running on the owner's Homebridge and has been
+  exercised from the Home app against the physical lift.
+
 ## [0.2.3] - 2026-09-15
 
 First release exercised against the physical lift at 192.168.5.40.
