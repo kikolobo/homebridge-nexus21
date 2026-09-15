@@ -644,15 +644,19 @@ would avoid that, and the owner chose to leave it as is.
   - **npm and GitHub must report the same version.** 0.2.4 was tagged but never published, so
     the bot saw npm 0.2.3 vs repo 0.2.4. Every version bump in the repo now has to be followed
     by an `npm publish`, or the check fails again.
-  - **The repo must contain GitHub *releases*, not just tags.** `v0.2.3`, `v0.2.4` and `v0.2.5`
-    exist as tags with no release attached. Create releases (`gh release create vX.Y.Z
-    --notes-file ...` from the CHANGELOG section, or the GitHub web UI) for each published
-    version. **Still open** — `gh` is installed (Homebrew, `/Users/frlobo/homebrew/bin/gh`) but
-    unauthenticated; `gh auth login` failed once with `HTTP 500` on the browser step. Fall back
-    to `gh auth login --with-token` with a classic PAT carrying the `repo` scope.
+  - ~~**The repo must contain GitHub *releases*, not just tags.**~~ **done 2026-09-15** —
+    releases created for `v0.2.3`, `v0.2.4` and `v0.2.5`, with 0.2.5 marked Latest. Each body
+    is that version's CHANGELOG section; `v0.2.4` carries a blockquote saying it was never
+    published to npm. `gh` is installed (Homebrew, `/Users/frlobo/homebrew/bin/gh`) and
+    authenticated as `kikolobo` via the device-code flow — note it failed once with `HTTP 500`
+    on the browser step and worked on a plain retry.
 
-  Status after the 0.2.5 publish: the keyword, schema and version-mismatch checks should now
-  pass. Only the releases check is outstanding.
+  **Every future release needs all three steps, or the bot fails again:** bump the version,
+  `npm publish --otp=<code>`, and `gh release create vX.Y.Z --notes-file <changelog section>`.
+  A tag alone is not a release.
+
+  Status after the 0.2.5 publish and the releases: all four failed checks are addressed.
+  Re-run the verification bot to confirm.
 
 ---
 
