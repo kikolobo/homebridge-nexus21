@@ -1,0 +1,58 @@
+{
+  "name": "homebridge-nexus21",
+  "displayName": "Nexus 21 TV Lift",
+  "version": "0.2.2",
+  "description": "Homebridge plugin for Nexus 21 TV lifts via the Nexus 21 IP Control module (IPLIN REST API).",
+  "author": "Kiko Lobo",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/kikolobo/homebridge-nexus21#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kikolobo/homebridge-nexus21.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kikolobo/homebridge-nexus21/issues"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "nexus21",
+    "tv-lift",
+    "iplin"
+  ],
+  "engines": {
+    "node": "^20.18.0 || ^22.10.0 || ^24.0.0 || ^26.0.0",
+    "homebridge": "^1.8.0 || ^2.0.0"
+  },
+  "scripts": {
+    "build": "rimraf ./dist && tsc",
+    "watch": "tsc -w",
+    "probe": "node tools/probe.mjs",
+    "prepack": "npm run build",
+    "test:sim": "npm run build && node test/sim.mjs",
+    "test": "npm run test:sim",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.12",
+    "eslint": "^9.39.5",
+    "homebridge": "^2.4.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.70.0"
+  },
+  "files": [
+    "dist",
+    "tools",
+    "config.schema.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ]
+}

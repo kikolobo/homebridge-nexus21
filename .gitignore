@@ -1,0 +1,15 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Packaged tarballs
+*.tgz
+
+# Logs
+npm-debug.log*
+*.log
+
+# macOS
+.DS_Store

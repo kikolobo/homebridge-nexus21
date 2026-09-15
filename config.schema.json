@@ -1,0 +1,165 @@
+{
+  "pluginAlias": "Nexus21",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Platform Name",
+        "type": "string",
+        "default": "Nexus21"
+      },
+      "discover": {
+        "title": "Log SSDP discovery at startup",
+        "description": "Lists IP modules found on the network in the Homebridge log (reserve their IPs in your router).",
+        "type": "boolean",
+        "default": true
+      },
+      "lifts": {
+        "title": "Lifts",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "default": "TV Lift"
+            },
+            "host": {
+              "title": "IP Module Address",
+              "type": "string",
+              "format": "hostname",
+              "required": true,
+              "default": "192.168.5.40",
+              "placeholder": "192.168.5.40"
+            },
+            "port": {
+              "title": "HTTP Port",
+              "type": "integer",
+              "default": 80
+            },
+            "model": {
+              "title": "Model",
+              "type": "string",
+              "placeholder": "L-45m"
+            },
+            "orientation": {
+              "title": "Lift Type",
+              "type": "string",
+              "default": "popup",
+              "oneOf": [
+                {
+                  "title": "Pop-up (TV rises = UP)",
+                  "enum": [
+                    "popup"
+                  ]
+                },
+                {
+                  "title": "Drop-down / ceiling (TV lowers = DOWN)",
+                  "enum": [
+                    "dropdown"
+                  ]
+                }
+              ]
+            },
+            "travelTimeSeconds": {
+              "title": "Full Travel Time (s)",
+              "type": "number",
+              "default": 20
+            },
+            "partialPositioning": {
+              "title": "Allow Partial Positions",
+              "description": "Timed move + stop. Off = slider snaps to fully open/closed.",
+              "type": "boolean",
+              "default": false
+            },
+            "memoryPresets": {
+              "title": "Memory Presets",
+              "description": "Shown as switches that are ON while the lift sits at that memory.",
+              "type": "array",
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "slot": {
+                    "title": "Memory",
+                    "type": "integer",
+                    "required": true,
+                    "oneOf": [
+                      {
+                        "title": "MEM1 (Home)",
+                        "enum": [
+                          1
+                        ]
+                      },
+                      {
+                        "title": "MEM2",
+                        "enum": [
+                          2
+                        ]
+                      },
+                      {
+                        "title": "MEM3",
+                        "enum": [
+                          3
+                        ]
+                      }
+                    ]
+                  },
+                  "name": {
+                    "title": "Name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "position": {
+                    "title": "Position (0 = hidden, 100 = fully visible)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                }
+              }
+            },
+            "websocketUrl": {
+              "title": "Websocket Feedback URL (optional)",
+              "description": "Push feedback instead of polling, e.g. ws://192.168.5.40/ws. Leave empty to poll only.",
+              "type": "string"
+            },
+            "pollIntervalSeconds": {
+              "title": "Idle Poll Interval (s)",
+              "type": "integer",
+              "default": 10,
+              "minimum": 2
+            },
+            "movingPollIntervalMs": {
+              "title": "Poll Interval While Moving (ms)",
+              "type": "integer",
+              "default": 1000,
+              "minimum": 250
+            },
+            "requestTimeoutMs": {
+              "title": "HTTP Timeout (ms)",
+              "type": "integer",
+              "default": 4000
+            },
+            "debug": {
+              "title": "Log API Traffic",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "default": [
+          {
+            "name": "TV Lift",
+            "host": "192.168.5.40",
+            "orientation": "popup"
+          }
+        ]
+      }
+    }
+  }
+}
