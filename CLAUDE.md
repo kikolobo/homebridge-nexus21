@@ -628,7 +628,13 @@ would avoid that, and the owner chose to leave it as is.
   and will not let it be removed, so **both `beta` and `latest` point at 0.2.3**. `latest` moves
   on its own with the next release — publish 1.0.0 once §9 is complete.
   npm 2FA is authenticator-based: publishing needs `--otp=<code>`, since the browser OTP flow
-  requires an interactive TTY and fails otherwise.
+  requires an interactive TTY and fails otherwise. A bare `npm publish` fails with `EOTP` and
+  publishes nothing, so a failed attempt is harmless — just retry with a fresh code.
+- [x] **Published 0.2.5 to npm 2026-09-15.** `latest` now points at **0.2.5**; `beta` was left
+  behind at 0.2.3. Move it with `npm dist-tag add homebridge-nexus21@<ver> beta` if that matters.
+  The registry read-path serves a stale version for ~45 s after a publish — `npm view` and a
+  direct `registry.npmjs.org` GET both showed the old `latest`. Wait and re-check rather than
+  assuming the publish failed.
 - [ ] Apply for the Homebridge "Verified" badge at homebridge.io (needs §9 finished first).
   Prerequisites already met: `homebridge-` name, `homebridge-plugin` keyword, `config.schema.json`,
   MIT LICENSE, public repo with issues enabled, no root required.
@@ -638,9 +644,15 @@ would avoid that, and the owner chose to leave it as is.
   - **npm and GitHub must report the same version.** 0.2.4 was tagged but never published, so
     the bot saw npm 0.2.3 vs repo 0.2.4. Every version bump in the repo now has to be followed
     by an `npm publish`, or the check fails again.
-  - **The repo must contain GitHub *releases*, not just tags.** `v0.2.3` and `v0.2.4` exist as
-    tags with no release attached. Create releases (`gh release create vX.Y.Z --notes-file ...`
-    from the CHANGELOG section, or the GitHub web UI) for each published version.
+  - **The repo must contain GitHub *releases*, not just tags.** `v0.2.3`, `v0.2.4` and `v0.2.5`
+    exist as tags with no release attached. Create releases (`gh release create vX.Y.Z
+    --notes-file ...` from the CHANGELOG section, or the GitHub web UI) for each published
+    version. **Still open** — `gh` is installed (Homebrew, `/Users/frlobo/homebrew/bin/gh`) but
+    unauthenticated; `gh auth login` failed once with `HTTP 500` on the browser step. Fall back
+    to `gh auth login --with-token` with a classic PAT carrying the `repo` scope.
+
+  Status after the 0.2.5 publish: the keyword, schema and version-mismatch checks should now
+  pass. Only the releases check is outstanding.
 
 ---
 
