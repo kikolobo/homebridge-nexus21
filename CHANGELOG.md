@@ -3,6 +3,27 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-09-15
+
+First release exercised against the physical lift at 192.168.5.40.
+
+### Fixed
+- A single failed status poll no longer tears down a move in progress. Previously
+  the first failure marked the module offline, which called `settle()` mid-travel:
+  HomeKit froze `CurrentPosition` partway, forced `PositionState` to STOPPED, showed
+  "No Response", and dropped back to the slow idle poll interval — while the TV was
+  still physically moving. The plugin now tolerates consecutive failures for longer
+  than a full travel whenever it believes a move is running, and only then reports
+  offline. Covered by a new HTTP-blackout case in the simulator.
+
+### Verified against real hardware
+- `GET /api/status` and `POST /api/command`, SSDP discovery, and full UP and DOWN
+  travels. Firmware `OS/2.2.1 UPnP/1.1 Nexus21-IPLIN/1.0`.
+- `EXTCMD` and `DESCRIPTION` are omitted from responses when empty, rather than
+  present-and-blank. Already handled by `normalizeStatus`.
+- Full travel measures 26.8 s in both directions; command → `MOVING` is 280–490 ms.
+- The module does not answer ICMP.
+
 ## [0.2.2] - 2026-09-15
 
 ### Changed

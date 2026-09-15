@@ -25,7 +25,11 @@ function apply(cmd, external = false) {
 }
 // ASSUMPTION: after a mid-travel stop the sim reports VERTICAL "STOPPED" (real firmware unknown, see CLAUDE.md §9)
 const status = () => ({ STATUS: lift.errors.length ? 'ERROR' : 'OK', VERTICAL: lift.cmd ? 'MOVING' : lift.rest, EXTCMD: lift.ext, DESCRIPTION: lift.errors });
+// When true the sim drops every connection, reproducing the mid-travel HTTP
+// dropout observed on the real module on 2026-09-15 (see CLAUDE.md §8).
+let blackout = false;
 const srv = http.createServer((req, res) => {
+  if (blackout) { req.socket.destroy(); return; }
   let body = '';
   req.on('data', (d) => (body += d));
   req.on('end', () => {
@@ -70,7 +74,22 @@ await sw.getCharacteristic(C.On).handleSetRequest(true); await sleep(3500);
 show(`MEM1 (switch on=${sw.getCharacteristic(C.On).value})`);
 lift.errors = [502]; await sleep(2500);
 lift.errors = []; await sleep(2500);
-console.log('lift command log:', cmdLog.join(' | '));
+// ── Mid-travel HTTP dropout ─────────────────────────────────────────
+// The plugin must keep tracking the move instead of settling at a frozen
+// position and reporting "No Response" on the first failed poll.
+await set(C.TargetPosition, 0); await sleep(3500);
+console.log('\n--- mid-travel HTTP dropout ---');
+await set(C.TargetPosition, 100); await sleep(800);
+const beforeBlackout = val(C.CurrentPosition);
+blackout = true;
+await sleep(1200);
+const duringState = val(C.PositionState), duringPos = val(C.CurrentPosition);
+show(`during blackout (1.2s)`);
+blackout = false;
+await sleep(2600); show('after recovery');
+const recoveredPos = val(C.CurrentPosition), recoveredState = val(C.PositionState);
+
+console.log('\nlift command log:', cmdLog.join(' | '));
 
 // Assertions on the command log — these are the invariants the stop/reverse
 // semantics depend on (CLAUDE.md §3.3).
@@ -79,6 +98,9 @@ const checks = [
   ['stop while moving DOWN sends UP', /UP@\d+\(moving DOWN\)/.test(joined)],
   ['reversal sends the same command twice', /DOWN@(\d+)\(moving UP\) \| DOWN@\1/.test(joined)],
   ['no command is sent while idle at rest', !/UP@100(?!\()/.test(joined)],
+  ['keeps tracking through an HTTP dropout', duringState === 1],
+  ['position still advances while dark', duringPos > beforeBlackout],
+  ['settles correctly once HTTP returns', recoveredPos === 100 && recoveredState === 2],
 ];
 let failed = 0;
 for (const [label, pass] of checks) {

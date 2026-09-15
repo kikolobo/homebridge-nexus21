@@ -82,7 +82,21 @@ Status field values:
 - `EXTCMD`: the last command seen on the LIN bus **that did not come from the API**, such as the RF remote or a keypad. Its values are the same as the command list.
 - `DESCRIPTION`: a "JSON list of error codes" (see 3.4). The exact shape isn't specified; the parser is tolerant (§5.2).
 
-The sheet's example JSON uses typographic curly quotes; real firmware is assumed to send normal JSON.
+The sheet's example JSON uses typographic curly quotes; real firmware sends normal JSON.
+
+**Measured on the real module 2026-09-15** (firmware `OS/2.2.1 UPnP/1.1 Nexus21-IPLIN/1.0`):
+
+```
+GET  /api/status   -> { "STATUS": "OK", "VERTICAL": "UP", "HORIZONTAL": "NA" }   (tab-indented)
+POST /api/command  -> { "STATUS": "OK" }
+```
+
+- Keys and values are upper-case, as documented.
+- **`EXTCMD` and `DESCRIPTION` are omitted entirely** when they have nothing to report — they are
+  not present-but-empty. `normalizeStatus` already yields `undefined` / `[]` for missing keys, so
+  no change was needed, but external-motion detection cannot count on `EXTCMD` being there.
+- `HORIZONTAL: "NA"` on the owner's unit → 1-actuator, no swivel.
+- The module **does not answer ICMP**. `ping` is not a valid reachability test; use `GET /api/status`.
 
 ### 3.2 Commands
 
@@ -521,7 +535,8 @@ Consider converting these checks into real assertions (e.g. `node:test`) so regr
 | Simulator (§6) on Homebridge 1.11.4 and 2.4.0 APIs | ✅ output above |
 | `npm pack` → install tgz into a fresh dir → real `homebridge` 2.4.0 binary | ✅ platform registered, lift added, "IP module reachable" against a mock |
 | Empty platform config `{ "platform": "Nexus21" }` in real Homebridge 2.4.0 | ✅ logged `Adding lift: TV Lift (192.168.5.40)` |
-| Physical Nexus 21 module at 192.168.5.40 | ❌ **not yet** |
+| Physical Nexus 21 module at 192.168.5.40 — status, SSDP, full UP and DOWN travel | ✅ 2026-09-15 (§9 steps 1, 2, 3c, 4) |
+| Physical module — mid-travel stop, same-command-while-moving, RF `EXTCMD`, websocket | ❌ still open (§9 steps 3b, 5, 6) |
 
 ---
 
@@ -529,16 +544,23 @@ Consider converting these checks into real assertions (e.g. `node:test`) so regr
 
 1. **Position is estimated.** The API only reports UP, DOWN, MOVING or MEMn, so intermediate positions come from `travelTimeSeconds`. Timed partial moves drift slightly.
 2. **External-motion detection latency** is up to `pollIntervalSeconds` (10 s by default) unless the websocket works. The estimate starts from the moment of detection, so it lags the real lift until the end-status settles it.
-3. **The mid-travel stop status is unknown.** The simulator assumes an unlisted value, which the plugin ignores. If the real firmware reports `UP` or `DOWN` after a mid-stop, the plugin will "settle" at 100 or 0 incorrectly. The workaround is to keep `partialPositioning` off.
-4. **Same-command-while-moving** is assumed to continue the motion rather than stop it. This is unverified.
-5. **The websocket URL is unknown.** Feedback via websocket is opt-in through `websocketUrl`.
-6. **No swivel/horizontal control.** `HORIZONTAL` is parsed but unused, and 2-actuator swivel positions are reachable only through the MEM presets.
-7. **The `DESCRIPTION` shape is unknown.** The parser grabs the first integer from each list item.
-8. **SSDP is log-only.** It does not auto-assign hosts, because replies carry no unique ID.
-9. **No authentication.** The API sheet mentions none; it's plain HTTP on the LAN.
-10. **Renaming a lift or changing its host re-creates the HomeKit accessory** (§5.4).
-11. ~~No ESLint yet.~~ ESLint (flat config) is in place and clean at zero warnings; keep it that way (`npm run lint`).
-12. `rimraf` is only used by the `build` script. It's fine as a devDependency.
+3. **The module can stop answering HTTP mid-travel.** Seen once in two full-travel runs on
+   2026-09-15: ~17 s of connection-level failures (undici `fetch failed`, not timeouts) starting
+   ~10 s into a DOWN move, then a clean recovery reporting the correct rest position. The very next
+   run (UP, same distance) had zero failed polls, so it is **intermittent and unattributed** — it may
+   be the module or the tester's Wi-Fi link. The plugin no longer collapses either way: see
+   `offlineAfterFailures()` in `liftAccessory.ts`, which tolerates failures for longer than a full
+   travel while a move is believed to be running. Regression-covered by the blackout case in §6.
+4. **The mid-travel stop status is unknown.** The simulator assumes an unlisted value, which the plugin ignores. If the real firmware reports `UP` or `DOWN` after a mid-stop, the plugin will "settle" at 100 or 0 incorrectly. The workaround is to keep `partialPositioning` off.
+5. **Same-command-while-moving** is assumed to continue the motion rather than stop it. This is unverified.
+6. **The websocket URL is unknown.** Feedback via websocket is opt-in through `websocketUrl`.
+7. **No swivel/horizontal control.** `HORIZONTAL` is parsed but unused, and 2-actuator swivel positions are reachable only through the MEM presets.
+8. **The `DESCRIPTION` shape is unknown.** The parser grabs the first integer from each list item.
+9. **SSDP is log-only.** It does not auto-assign hosts, because replies carry no unique ID.
+10. **No authentication.** The API sheet mentions none; it's plain HTTP on the LAN.
+11. **Renaming a lift or changing its host re-creates the HomeKit accessory** (§5.4).
+12. ~~No ESLint yet.~~ ESLint (flat config) is in place and clean at zero warnings; keep it that way (`npm run lint`).
+13. `rimraf` is only used by the `build` script. It's fine as a devDependency.
 
 ---
 
@@ -546,14 +568,18 @@ Consider converting these checks into real assertions (e.g. `node:test`) so regr
 
 Do these in order. Read-only steps need no approval; ⚠ steps need the owner present and approving.
 
-1. `node tools/probe.mjs 192.168.5.40 status`. Record the exact JSON: key casing, value casing, `DESCRIPTION` shape, extra fields.
-2. `node tools/probe.mjs discover`. Record the `SERVER:` header (firmware version).
+1. ~~`node tools/probe.mjs 192.168.5.40 status`~~ **done 2026-09-15** — see §3.1 for the recorded JSON.
+2. ~~`node tools/probe.mjs discover`~~ **done 2026-09-15** — `SERVER: OS/2.2.1 UPnP/1.1 Nexus21-IPLIN/1.0`, `USN:0`.
 3. Run `node tools/probe.mjs 192.168.5.40 watch` in one terminal. The **owner** uses the RF remote to:
    - a. Move fully up. Record the sequence (expect `MOVING` → `UP`) and `EXTCMD`.
    - b. Stop mid-travel. **Record VERTICAL after the stop** (assumption 3).
    - c. Move fully down.
    - d. Go to MEM1, MEM2 and MEM3. Record the values and the physical position of each (for the `position` config).
-4. Time a full travel with a stopwatch, both directions, and use the larger value for `travelTimeSeconds`.
+4. ~~Time a full travel, both directions.~~ **done 2026-09-15.** Both directions measure
+   **26.8 s** `MOVING` → rest (27.3 s from the command; command → `MOVING` latency is 280–490 ms,
+   well inside `COMMAND_GRACE_MS`). The UP run was clean of dropouts, so this is a real
+   measurement, not an upper bound. **Configure `travelTimeSeconds: 28`** — the code default of
+   20 is too low for this lift.
 5. ⚠ With approval, via probe:
    - `UP`, then `UP` again while moving (assumption 4: continues or stops?).
    - `DOWN` while moving UP (should stop).

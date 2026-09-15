@@ -42,6 +42,7 @@ export class LiftAccessory {
   private target: number;
   private state: number;
   private online?: boolean;
+  private failures = 0;
   private vertical?: string;
   private lastMotion?: NexusCommand;
   private graceUntil = 0;
@@ -235,13 +236,34 @@ export class LiftAccessory {
   private async poll(): Promise<void> {
     try {
       const s = await this.api.status();
+      this.failures = 0;
       this.setOnline(true);
       this.applyStatus(s);
     } catch (err) {
-      this.setOnline(false, err as Error);
+      this.failures++;
+      if (this.failures >= this.offlineAfterFailures()) {
+        this.setOnline(false, err as Error);
+      } else {
+        this.platform.log.debug(
+          `[${this.cfg.name}] status poll failed (${this.failures}): ${(err as Error).message}`);
+      }
     } finally {
       this.schedulePoll();
     }
+  }
+
+  /**
+   * How many consecutive failed polls before HomeKit is told "No Response".
+   *
+   * Observed on the real module (2026-09-15): it can stop answering HTTP for
+   * ~17 s in the middle of a travel, then come back and report the correct rest
+   * position. Cause unconfirmed — module or Wi-Fi — but one dropped poll must
+   * not settle a move that is still physically running, so while we believe the
+   * lift is moving we tolerate failures for longer than a full travel.
+   */
+  private offlineAfterFailures(): number {
+    const moving = this.state !== this.platform.Characteristic.PositionState.STOPPED;
+    return moving ? Math.max(5, Math.ceil((this.travelMs * 1.5) / this.movingPollMs)) : 3;
   }
 
   private applyStatus(s: NexusStatus): void {
@@ -396,6 +418,7 @@ export class LiftAccessory {
     const wasKnown = this.online !== undefined;
     this.online = online;
     if (online) {
+      this.failures = 0;
       this.platform.log.info(`[${this.cfg.name}] IP module reachable at ${this.cfg.host}`);
     } else {
       this.platform.log.warn(`[${this.cfg.name}] IP module unreachable: ${err?.message ?? 'unknown error'}`);
