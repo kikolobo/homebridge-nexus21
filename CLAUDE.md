@@ -536,6 +536,7 @@ Consider converting these checks into real assertions (e.g. `node:test`) so regr
 | `npm pack` → install tgz into a fresh dir → real `homebridge` 2.4.0 binary | ✅ platform registered, lift added, "IP module reachable" against a mock |
 | Empty platform config `{ "platform": "Nexus21" }` in real Homebridge 2.4.0 | ✅ logged `Adding lift: TV Lift (192.168.5.40)` |
 | Physical Nexus 21 module at 192.168.5.40 — status, SSDP, full UP and DOWN travel | ✅ 2026-09-15 (§9 steps 1, 2, 3c, 4) |
+| Installed from npm on the owner's Homebridge (`automation.local`, HB 1.11.2, official Linux image) and driven from the Home app | ✅ 2026-09-15 — owner reports all tests fine |
 | Physical module — mid-travel stop, same-command-while-moving, RF `EXTCMD`, websocket | ❌ still open (§9 steps 3b, 5, 6) |
 
 ---
@@ -592,7 +593,20 @@ Do these in order. Read-only steps need no approval; ⚠ steps need the owner pr
    - Continue/stop behavior → `startMotion`.
 
    Then update the simulator's ASSUMPTION lines to match the real device, and re-run §6.
-8. Install on the owner's Homebridge (§4.3). Configure it with `debug: true`, pair as a **child bridge**, and test from the Home app and Siri. Then set `debug: false`.
+8. ~~Install on the owner's Homebridge.~~ **done 2026-09-15** — installed from npm on
+   `automation.local` (192.168.5.159, Homebridge 1.11.2, official Linux image, bridge
+   "Wolf Automation"). Owner confirms it works from the Home app. Remember to set
+   `debug: false` once the log has been reviewed.
+
+**Accessory modelling — settled 2026-09-15, don't revisit without cause.** HomeKit has no
+TV-lift service or category. Only `Door`, `Window` and `WindowCovering` expose a continuous
+0–100 position, and their characteristic sets are identical; `Television` has no position at
+all. `WindowCovering` stays. Setting `PlatformAccessory.category` would be pointless here:
+Homebridge reads it only in `publishExternalAccessory`, and HAP sends it only in the Bonjour
+`ci` TXT field and the pairing QR of the *published* accessory — it is absent from the
+`/accessories` JSON that the Home app reads for bridged accessories. The one real trade-off is
+that `WindowCovering` accessories are swept up by "close all the shades"; switching to `Door`
+would avoid that, and the owner chose to leave it as is.
 
 ---
 
