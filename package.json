@@ -28,8 +28,8 @@
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "watch": "tsc -w",
+    "prepare": "npm run build",
     "probe": "node tools/probe.mjs",
-    "prepack": "npm run build",
     "test:sim": "npm run build && node test/sim.mjs",
     "test": "npm run test:sim",
     "lint": "eslint ."
